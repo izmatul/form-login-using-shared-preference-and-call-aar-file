@@ -1,0 +1,107 @@
+package com.example.izmatulfarihah.myapplication.fragment;
+
+import android.app.Fragment;
+import android.app.FragmentManager;
+import android.app.FragmentTransaction;
+import android.content.Context;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import com.example.izmatulfarihah.myapplication.Contact;
+import com.example.izmatulfarihah.myapplication.DatabaseHandler;
+import com.example.izmatulfarihah.myapplication.R;
+import com.example.izmatulfarihah.myapplication.SessionManager;
+
+import java.util.HashMap;
+import java.util.List;
+
+/**
+ * Created by izmatul.farihah on 25/09/2014.
+ */
+public class LoginFragment extends Fragment implements View.OnClickListener{
+    private Context context;
+    private DatabaseHandler db;
+    private Contact contact;
+    SessionManager session;
+    EditText et_email, et_password;
+    TextView tv;
+    Button btnLogin;
+    RegFragment regFragment = new RegFragment();
+    ListFragment listFragment = new ListFragment();
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.login_layout, container, false);
+
+        db = new DatabaseHandler(getActivity());
+        session = new SessionManager(getActivity());
+
+//        Log.d("Insert: ", "Inserting ..");
+//        db.addContact(new Contact("Izmatul", "izmatulfarihah@gmail.com", "081282344892", "izmatul"));
+//        db.addContact(new Contact("Rio", "riohermawan@gmail.com", "081282344893", "rio"));
+//        db.addContact(new Contact("Fitri", "fitrinababan@gmail.com", "0878888888888", "fitri"));
+//        db.addContact(new Contact("Eko", "ekosanaky@gmail.com", "0876666666", "eko"));
+
+
+        Log.d("Reading: ", "Reading all contacts..");
+        List<Contact> contacts = db.getAllContacts();
+
+        for (Contact cn : contacts) {
+            String log = "Id: " + cn.getId() + " ,Name: " + cn.getName() + " ,Email: " + cn.getEmail() + " ,Phone: " + cn.getPhone_number() + " ,Password: " + cn.getPassword();
+            // Writing Contacts to log
+            Log.d("Name: ", log);
+        }
+
+        tv = (TextView) view.findViewById(R.id.link_to_register);
+        btnLogin = (Button) view.findViewById(R.id.btnLogin);
+        et_email = (EditText) view.findViewById(R.id.et_email);
+        et_password = (EditText) view.findViewById(R.id.et_password);
+        tv.setOnClickListener(this);
+        btnLogin.setOnClickListener(this);
+
+        return view;
+    }
+
+    @Override
+    public void onClick(View v) {
+
+        if (v==tv) {
+            FragmentManager fm = getFragmentManager();
+            FragmentTransaction ft = fm.beginTransaction();
+            ft.replace(R.id.content_frame, regFragment);
+            ft.addToBackStack(null);
+            ft.commit();
+        }
+        else if (v==btnLogin) {
+            FragmentManager fm = getFragmentManager();
+            FragmentTransaction ft = fm.beginTransaction();
+            String email = String.valueOf(et_email.getText());
+            String password = String.valueOf(et_password.getText());
+
+            db = new DatabaseHandler(getActivity());
+            if((contact = db.getContact(email, password))!=null) {
+                session.createLoginSession(contact);
+//                listFragment.getData(contact);
+//                HashMap<String, String> user = session.getUserDetails();
+                ft.replace(R.id.content_frame, listFragment);
+                ft.addToBackStack(null);
+                ft.commit();
+                Log.i("data", contact.getEmail());
+            }
+            else {
+                Toast.makeText(getActivity(), "Username or password is invalid", Toast.LENGTH_LONG).show();
+            }
+
+            et_email.setText("");
+            et_password.setText("");
+        }
+
+    }
+}
